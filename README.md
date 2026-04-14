@@ -1,16 +1,26 @@
-# React + Vite
+# Nexus Mentorship - Semester 4 Mini Project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Live Demo:** [Click here to open the application!](https://0x4r35.github.io/sem-4-mini-project/)
 
-Currently, two official plugins are available:
+## About The Project
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+This is my Semester 4 Mini Project! The concept is a **Startup Mentoring System** designed to connect new founders with elite industry mentors. It provides high-end networking opportunities and includes an intelligent AI Advisor to immediately answer questions about scaling, funding, and tech stacks. 
 
-## React Compiler
+The goal of this project is to create an ecosystem specifically tailored to the demanding needs of FinTech, Tech, and Engineering startups, emphasizing a highly professional user experience without distracting visual clutter.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## How It Is Made
 
-## Expanding the ESLint configuration
+This application was engineered with a modern, lightning-fast technology stack:
+- **Frontend Framework:** React.js powered by Vite for rapid development and optimized asset bundling.
+- **Styling Architecture:** Pure CSS leveraging variables for a consistent "glassmorphism" tech-aesthetic (slate/navy color palette, no neon). 
+- **Routing:** Built as a pure Single Page Application (SPA) using React Router DOM, meaning there are exactly zero page reloads while navigating.
+- **AI Integration:** Integrated with the OpenAI API (`gpt-3.5-turbo`) to create a context-aware conversational AI agent customized purely for elite startup mentoring.
+- **CI/CD:** Automated continuous deployment hosted entirely on GitHub Pages via GitHub Actions.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Key Features
+
+- **Mentor Directory:** A sleek grid displaying Mock Industry Leaders, filtering capabilities, and simulated asynchronous data fetching to emulate realistic latency.
+- **AI Startup Advisor:** Real-time chat interface connected to a neural network to provide instant founder-level advice.
+- **Responsive "Fintech" Design:** Modern UI designed deliberately to maintain professionalism and earn confidence.
+
+*(Note: Data persistence and user authentication via Firebase are slated for future developmental phases).*
