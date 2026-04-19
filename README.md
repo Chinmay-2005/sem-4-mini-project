@@ -55,7 +55,7 @@
 | **Routing** | React Router v6 |
 | **Auth & Database** | Supabase (PostgreSQL + Auth + RLS) |
 | **Backend API** | Node.js + Express.js |
-| **AI Advisor** | OpenAI GPT API |
+| **AI Agent** | Google's Generative AI (`@google/generative-ai` / Gemini 1.5) |
 | **Icons** | Lucide React |
 | **Deployment** | GitHub Pages (Frontend) |
 

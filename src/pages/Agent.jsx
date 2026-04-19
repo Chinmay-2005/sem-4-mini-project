@@ -1,18 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Ensure the OpenAI key is loaded securely
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+// Ensure the Gemini key is loaded securely
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-const openai = new OpenAI({
-  apiKey: apiKey,
-  dangerouslyAllowBrowser: true // This is needed for a frontend-only deploy, though not recommended for prod.
-});
+// Initialize the Google Generative AI client
+const genAI = new GoogleGenerativeAI(apiKey || 'dummy_key_to_prevent_crash_if_missing');
 
 export default function Agent() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hello! I am your AI Startup Advisor. Whether you need strategies for product-led growth, advice on term sheets, or tips for scaling your engineering team, I'm here to help." }
+    { role: 'model', content: "Hello! I am your AI Startup Advisor powered by Google Gemini. Whether you need strategies for product-led growth, advice on term sheets, or tips for scaling your engineering team, I'm here to help." }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,26 +33,34 @@ export default function Agent() {
 
     if (!apiKey) {
       setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'assistant', content: "Error: No API Key provided in environment variables (VITE_OPENAI_API_KEY). For deployment, ensure it's set as a GitHub Repository Secret." }]);
+        setMessages(prev => [...prev, { role: 'model', content: "Error: No API Key provided in environment variables (VITE_GEMINI_API_KEY)." }]);
         setLoading(false);
       }, 1000);
       return;
     }
 
     try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'You are an elite startup advisor and mentor. You provide highly professional, concise, and actionable advice tailored to tech founders and fintech executives. Avoid generic responses; use industry terminology accurately.' },
-          ...messages,
-          userMessage
-        ]
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        systemInstruction: "You are an elite startup advisor and mentor. You provide highly professional, concise, and actionable advice tailored to tech founders and fintech executives. Avoid generic responses; use industry terminology accurately."
+      });
+      
+      const chatHistory = messages.map(msg => ({
+        role: msg.role,
+        parts: [{ text: msg.content }]
+      }));
+
+      const chat = model.startChat({
+        history: chatHistory,
       });
 
-      setMessages(prev => [...prev, response.choices[0].message]);
+      const result = await chat.sendMessage(userMessage.content);
+      const response = await result.response;
+      
+      setMessages(prev => [...prev, { role: 'model', content: response.text() }]);
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'assistant', content: "I encountered an error connecting to the neural network. Please verify your API key or try again later." }]);
+      setMessages(prev => [...prev, { role: 'model', content: "I encountered an error connecting to the neural network. Please verify your API key or try again later." }]);
     } finally {
       setLoading(false);
     }
