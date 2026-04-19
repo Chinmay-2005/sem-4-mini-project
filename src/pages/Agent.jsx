@@ -42,11 +42,12 @@ export default function Agent() {
     try {
       const model = genAI.getGenerativeModel({ 
         model: "gemini-1.5-flash",
-        systemInstruction: "You are an elite startup advisor and mentor. You provide highly professional, concise, and actionable advice tailored to tech founders and fintech executives. Avoid generic responses; use industry terminology accurately."
       });
       
-      const chatHistory = messages.map(msg => ({
-        role: msg.role,
+      // Filter history to ONLY include past turns, excluding the current user message
+      // Also ensure the first message is always from the user or handled correctly
+      const chatHistory = messages.slice(0, -1).map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : msg.role,
         parts: [{ text: msg.content }]
       }));
 
@@ -54,13 +55,14 @@ export default function Agent() {
         history: chatHistory,
       });
 
-      const result = await chat.sendMessage(userMessage.content);
+      // Send ONLY the new input
+      const result = await chat.sendMessage(input || userMessage.content);
       const response = await result.response;
       
       setMessages(prev => [...prev, { role: 'model', content: response.text() }]);
     } catch (error) {
-      console.error(error);
-      setMessages(prev => [...prev, { role: 'model', content: "I encountered an error connecting to the neural network. Please verify your API key or try again later." }]);
+      console.error('Gemini Error:', error);
+      setMessages(prev => [...prev, { role: 'model', content: "I encountered an error connecting to the neural network. Please check your API key in Google AI Studio." }]);
     } finally {
       setLoading(false);
     }
