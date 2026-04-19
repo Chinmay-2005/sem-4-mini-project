@@ -37,42 +37,46 @@ export default function Agent() {
     }
 
     try {
-      // Use direct fetch to the v1 endpoint for maximum browser compatibility (bypasses SDK overhead)
-      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: updatedMessages.map(msg => ({
-            role: msg.role === 'assistant' ? 'model' : msg.role,
-            parts: [{ text: msg.content }]
-          })),
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        })
-      });
+      // List of models to try in order of preference (handles regional/account variations)
+      const modelNames = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro'];
+      let lastError = '';
+      let aiText = '';
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error?.message || `HTTP ${response.status}`);
+      for (const modelName of modelNames) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: updatedMessages.map(msg => ({
+                role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
+                parts: [{ text: msg.content }]
+              })),
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (aiText) break; // Success!
+          } else {
+            const err = await response.json();
+            lastError = err.error?.message || `HTTP ${response.status}`;
+          }
+        } catch (e) {
+          lastError = e.message;
+        }
       }
 
-      const data = await response.json();
-      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't process that request.";
+      if (!aiText) throw new Error(lastError || "Could not connect to any AI models.");
       
       setMessages(prev => [...prev, { role: 'model', content: aiText }]);
     } catch (error) {
-      console.error('Gemini Fetch Error:', error);
+      console.error('Gemini Universal Error:', error);
       setMessages(prev => [...prev, { 
         role: 'model', 
-        content: `Connection Error: ${error.message}. Please check your internet or try an incognito window without extensions.` 
+        content: `Error: ${error.message}. Please check if your API key is restricted or try an incognito window.` 
       }]);
     } finally {
       setLoading(false);
