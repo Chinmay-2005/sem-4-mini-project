@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Ensure the Gemini key is loaded securely
+// Ensure the Gemini key is loaded securely (Note: Must be set in GitHub Secrets for live deploy)
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 // Initialize the Google Generative AI client
