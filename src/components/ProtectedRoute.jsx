@@ -16,15 +16,15 @@ export function ProtectedRoute({ children, requiredRole }) {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        minHeight: '70vh', flexDirection: 'column', gap: '1.5rem'
+        minHeight: '70vh', flexDirection: 'column', gap: '15px'
       }}>
         <div style={{
-          width: '48px', height: '48px', borderRadius: '50%',
-          border: '3px solid var(--border-light)',
-          borderTopColor: 'var(--accent-primary)',
+          width: '40px', height: '40px', borderRadius: '50%',
+          border: '3px solid #dcdcdc',
+          borderTopColor: '#3498db',
           animation: 'spin 0.8s linear infinite'
         }} />
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+        <p style={{ color: '#666', fontSize: '13px' }}>
           Restoring your session…
         </p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
