@@ -4,7 +4,7 @@
 
 ## 🌐 Live Demo
 
-### **[→ Open the App](https://startup-mentors-app.vercel.app)**
+### **[→ Open the App](https://0x4r35.github.io/sem-4-mini-project/)**
 
 | Role | Email | Password |
 |------|-------|----------|
@@ -57,7 +57,7 @@
 | **Backend API** | Node.js + Express.js |
 | **AI Advisor** | OpenAI GPT API |
 | **Icons** | Lucide React |
-| **Deployment** | Vercel (Frontend) |
+| **Deployment** | GitHub Pages (Frontend) |
 
 ---
 
