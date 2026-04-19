@@ -219,7 +219,7 @@ function AppShell() {
 
 export default function App() {
   return (
-    <Router>
+    <Router basename="/sem-4-mini-project">
       <AuthProvider>
         <AppShell />
       </AuthProvider>
