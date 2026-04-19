@@ -40,6 +40,7 @@ export default function Agent() {
     }
 
     try {
+      // Use gemini-1.5-flash but wrapped in a try block to handle potential 404s
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const chatHistory = messages.slice(0, -1).map(msg => ({
@@ -54,11 +55,25 @@ export default function Agent() {
       setMessages(prev => [...prev, { role: 'model', content: response.text() }]);
     } catch (error) {
       console.error('Gemini Error:', error);
-      // Detailed error reporting for debugging
+      
+      // If gemini-1.5-flash fails (404), try falling back to gemini-pro
+      if (error.message?.includes('404') || error.message?.includes('not found')) {
+         try {
+            const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const chat = fallbackModel.startChat({ history: [] }); // start fresh for fallback
+            const result = await chat.sendMessage(input || userMessage.content);
+            const response = await result.response;
+            setMessages(prev => [...prev, { role: 'model', content: response.text() }]);
+            return;
+         } catch (fallbackErr) {
+            console.error('Fallback Error:', fallbackErr);
+         }
+      }
+
       const errorMsg = error.message || JSON.stringify(error);
       setMessages(prev => [...prev, { 
         role: 'model', 
-        content: `Error: ${errorMsg}. Please ensure "Generative Language API" is enabled in your Google Cloud Console and your key is correct.` 
+        content: `Error: ${errorMsg}. Please visit https://aistudio.google.com/app/apikey to ensure your key is active and "Generative Language API" is enabled in Cloud Console.` 
       }]);
     } finally {
       setLoading(false);
