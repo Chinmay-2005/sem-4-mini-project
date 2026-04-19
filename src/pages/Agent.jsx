@@ -1,12 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Ensure the Gemini key is loaded securely (Note: Must be set in GitHub Secrets for live deploy)
+// Ensure the Gemini key is loaded securely
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-// Initialize the Google Generative AI client
-const genAI = new GoogleGenerativeAI(apiKey || 'dummy_key_to_prevent_crash_if_missing');
 
 export default function Agent() {
   const [messages, setMessages] = useState([
@@ -27,53 +23,56 @@ export default function Agent() {
     if (!input.trim() || loading) return;
 
     const userMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput('');
     setLoading(true);
 
     if (!apiKey) {
       setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'model', content: "Error: No API Key provided in environment variables (VITE_GEMINI_API_KEY)." }]);
+        setMessages(prev => [...prev, { role: 'model', content: "Error: No API Key found (VITE_GEMINI_API_KEY). Please add it to GitHub Secrets." }]);
         setLoading(false);
       }, 1000);
       return;
     }
 
     try {
-      // Use gemini-1.5-flash but wrapped in a try block to handle potential 404s
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      // Use direct fetch to the v1 endpoint for maximum browser compatibility (bypasses SDK overhead)
+      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
       
-      const chatHistory = messages.slice(0, -1).map(msg => ({
-        role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }));
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: updatedMessages.map(msg => ({
+            role: msg.role === 'assistant' ? 'model' : msg.role,
+            parts: [{ text: msg.content }]
+          })),
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
+        })
+      });
 
-      const chat = model.startChat({ history: chatHistory });
-      const result = await chat.sendMessage(input || userMessage.content);
-      const response = await result.response;
-      
-      setMessages(prev => [...prev, { role: 'model', content: response.text() }]);
-    } catch (error) {
-      console.error('Gemini Error:', error);
-      
-      // If gemini-1.5-flash fails (404), try falling back to gemini-pro
-      if (error.message?.includes('404') || error.message?.includes('not found')) {
-         try {
-            const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro" });
-            const chat = fallbackModel.startChat({ history: [] }); // start fresh for fallback
-            const result = await chat.sendMessage(input || userMessage.content);
-            const response = await result.response;
-            setMessages(prev => [...prev, { role: 'model', content: response.text() }]);
-            return;
-         } catch (fallbackErr) {
-            console.error('Fallback Error:', fallbackErr);
-         }
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error?.message || `HTTP ${response.status}`);
       }
 
-      const errorMsg = error.message || JSON.stringify(error);
+      const data = await response.json();
+      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't process that request.";
+      
+      setMessages(prev => [...prev, { role: 'model', content: aiText }]);
+    } catch (error) {
+      console.error('Gemini Fetch Error:', error);
       setMessages(prev => [...prev, { 
         role: 'model', 
-        content: `Error: ${errorMsg}. Please visit https://aistudio.google.com/app/apikey to ensure your key is active and "Generative Language API" is enabled in Cloud Console.` 
+        content: `Connection Error: ${error.message}. Please check your internet or try an incognito window without extensions.` 
       }]);
     } finally {
       setLoading(false);
