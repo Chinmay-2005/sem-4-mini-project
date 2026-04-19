@@ -40,29 +40,26 @@ export default function Agent() {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-      });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
-      // Filter history to ONLY include past turns, excluding the current user message
-      // Also ensure the first message is always from the user or handled correctly
       const chatHistory = messages.slice(0, -1).map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : msg.role,
+        role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       }));
 
-      const chat = model.startChat({
-        history: chatHistory,
-      });
-
-      // Send ONLY the new input
+      const chat = model.startChat({ history: chatHistory });
       const result = await chat.sendMessage(input || userMessage.content);
       const response = await result.response;
       
       setMessages(prev => [...prev, { role: 'model', content: response.text() }]);
     } catch (error) {
       console.error('Gemini Error:', error);
-      setMessages(prev => [...prev, { role: 'model', content: "I encountered an error connecting to the neural network. Please check your API key in Google AI Studio." }]);
+      // Detailed error reporting for debugging
+      const errorMsg = error.message || JSON.stringify(error);
+      setMessages(prev => [...prev, { 
+        role: 'model', 
+        content: `Error: ${errorMsg}. Please ensure "Generative Language API" is enabled in your Google Cloud Console and your key is correct.` 
+      }]);
     } finally {
       setLoading(false);
     }
