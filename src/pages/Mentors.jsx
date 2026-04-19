@@ -13,31 +13,49 @@ export default function Mentors() {
 
   const { user } = useAuth();
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id, full_name, avatar_url,
-          mentor_details (title, bio, expertise, rating, sessions_count, available)
-        `)
-        .eq('role', 'mentor')
-        .order('full_name');
+  const [errorMsg, setErrorMsg] = useState('');
 
-      if (!error && data) {
-        setMentors(data.filter(m => m.mentor_details !== null));
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(`
+            id, full_name, avatar_url,
+            mentor_details (title, bio, expertise, rating, sessions_count, available)
+          `)
+          .eq('role', 'mentor')
+          .order('full_name');
+
+        if (!isMounted) return;
+
+        if (error) {
+          console.error('Supabase error:', error);
+          setErrorMsg(error.message);
+        } else if (data) {
+          setMentors(data.filter(m => m.mentor_details !== null));
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        if (isMounted) setErrorMsg(err.message);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     })();
+    return () => { isMounted = false; };
   }, []);
 
   const filtered = mentors.filter(m => {
     const t = searchTerm.toLowerCase();
+    const name = m.full_name || '';
+    const title = m.mentor_details?.title || '';
+    const exp = m.mentor_details?.expertise || [];
     return (
-      m.full_name.toLowerCase().includes(t) ||
-      m.mentor_details?.title?.toLowerCase().includes(t) ||
-      m.mentor_details?.expertise?.some(e => e.toLowerCase().includes(t))
+      name.toLowerCase().includes(t) ||
+      title.toLowerCase().includes(t) ||
+      exp.some(e => typeof e === 'string' && e.toLowerCase().includes(t))
     );
   });
 
@@ -106,6 +124,11 @@ export default function Mentors() {
         )}
 
         {/* Mentor Cards */}
+        {errorMsg && (
+          <div className="alert alert-danger" style={{ marginBottom: '20px' }}>
+            <strong>Error loading mentors:</strong> {errorMsg}
+          </div>
+        )}
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px,1fr))', gap: '20px' }}>
             {[...Array(4)].map((_, i) => (
