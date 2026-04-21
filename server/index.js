@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import mentorRoutes from './routes/mentors.js';
 import bookingRoutes from './routes/bookings.js';
 import aiRoutes from './routes/ai.js';
+import notifyRoutes from './routes/notify.js';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().t
 app.use('/api/mentors', mentorRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/notify', notifyRoutes);
 
 // Error handler
 app.use((err, req, res, next) => {

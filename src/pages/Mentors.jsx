@@ -59,11 +59,14 @@ export default function Mentors() {
     );
   });
 
+  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+
   const handleBook = async (mentorId) => {
     if (!user) {
       window.location.href = '/login';
       return;
     }
+    const mentor = mentors.find(m => m.id === mentorId);
     const { error } = await supabase.from('bookings').insert({
       user_id: user.id,
       mentor_id: mentorId,
@@ -72,6 +75,22 @@ export default function Mentors() {
     });
     setBookStatus(prev => ({ ...prev, [mentorId]: error ? 'error' : 'success' }));
     setBooking(null);
+
+    // Send email notification (non-blocking)
+    if (!error && mentor) {
+      fetch(`${API_URL}/api/notify/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mentorName: mentor.full_name,
+          mentorTitle: mentor.mentor_details?.title,
+          userName: user.user_metadata?.full_name || user.email,
+          userEmail: user.email,
+          message: bookMsg || ''
+        })
+      }).catch(err => console.log('Email notification failed:', err));
+    }
+
     setBookMsg('');
     setTimeout(() => setBookStatus(prev => ({ ...prev, [mentorId]: null })), 3000);
   };
