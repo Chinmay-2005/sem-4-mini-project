@@ -3,9 +3,29 @@ import { Search, Filter, Star, Mail, BookOpen, X, Calendar, Clock, CheckCircle }
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
+// Hardcoded fallback mentors — always available instantly
+const FALLBACK_MENTORS = [
+  {
+    id: 'fallback-1', full_name: 'David Kim', avatar_url: null,
+    mentor_details: { title: 'Founder & CEO (Exited @ $180M)', bio: 'Bootstrapped to $50M ARR and successfully exited via acquisition. Mentors founders on capital-efficient growth loops, M&A preparation, and post-exit strategy.', expertise: ['Consumer Tech', 'Product Led Growth', 'M&A'], rating: 4.9, sessions_count: 176, available: true }
+  },
+  {
+    id: 'fallback-2', full_name: 'Elena Rodriguez', avatar_url: null,
+    mentor_details: { title: 'Ex-CFO at Stripe', bio: 'Scaled payments infrastructure globally across 40+ countries. Specializes in Series B to IPO financial strategy and FinTech regulatory compliance.', expertise: ['Fintech', 'Fundraising', 'Scale-ups'], rating: 4.9, sessions_count: 142, available: true }
+  },
+  {
+    id: 'fallback-3', full_name: 'Marcus Chen', avatar_url: null,
+    mentor_details: { title: 'Former VP Engineering, Coinbase', bio: 'Built scalable engineering teams from 10 to 500+. Passionate about robust distributed systems, zero-downtime deployments, and security-first architecture.', expertise: ['Blockchain', 'System Architecture', 'Security'], rating: 5.0, sessions_count: 89, available: true }
+  },
+  {
+    id: 'fallback-4', full_name: 'Sarah Jenkins', avatar_url: null,
+    mentor_details: { title: 'Partner at Sequoia Capital', bio: '10+ years investing in enterprise software. Helps founders refine their pitch deck, pricing strategy, and navigate the venture fundraising landscape.', expertise: ['Venture Capital', 'B2B SaaS', 'GTM Strategy'], rating: 4.8, sessions_count: 207, available: true }
+  }
+];
+
 export default function Mentors() {
-  const [mentors,    setMentors]    = useState([]);
-  const [loading,    setLoading]    = useState(true);
+  const [mentors,    setMentors]    = useState(FALLBACK_MENTORS);
+  const [loading,    setLoading]    = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [bookStatus, setBookStatus] = useState({});      // { [mentorId]: 'success'|'error' }
 
@@ -27,34 +47,13 @@ export default function Mentors() {
   const { user } = useAuth();
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Hardcoded fallback mentors
-  const FALLBACK_MENTORS = [
-    {
-      id: 'fallback-1', full_name: 'David Kim', avatar_url: null,
-      mentor_details: { title: 'Founder & CEO (Exited @ $180M)', bio: 'Bootstrapped to $50M ARR and successfully exited via acquisition. Mentors founders on capital-efficient growth loops, M&A preparation, and post-exit strategy.', expertise: ['Consumer Tech', 'Product Led Growth', 'M&A'], rating: 4.9, sessions_count: 176, available: true }
-    },
-    {
-      id: 'fallback-2', full_name: 'Elena Rodriguez', avatar_url: null,
-      mentor_details: { title: 'Ex-CFO at Stripe', bio: 'Scaled payments infrastructure globally across 40+ countries. Specializes in Series B to IPO financial strategy and FinTech regulatory compliance.', expertise: ['Fintech', 'Fundraising', 'Scale-ups'], rating: 4.9, sessions_count: 142, available: true }
-    },
-    {
-      id: 'fallback-3', full_name: 'Marcus Chen', avatar_url: null,
-      mentor_details: { title: 'Former VP Engineering, Coinbase', bio: 'Built scalable engineering teams from 10 to 500+. Passionate about robust distributed systems, zero-downtime deployments, and security-first architecture.', expertise: ['Blockchain', 'System Architecture', 'Security'], rating: 5.0, sessions_count: 89, available: true }
-    },
-    {
-      id: 'fallback-4', full_name: 'Sarah Jenkins', avatar_url: null,
-      mentor_details: { title: 'Partner at Sequoia Capital', bio: '10+ years investing in enterprise software. Helps founders refine their pitch deck, pricing strategy, and navigate the venture fundraising landscape.', expertise: ['Venture Capital', 'B2B SaaS', 'GTM Strategy'], rating: 4.8, sessions_count: 207, available: true }
-    }
-  ];
-
+  // Try to load real data from Supabase in the background (non-blocking)
   useEffect(() => {
     let isMounted = true;
-    const controller = new AbortController();
     const fetchMentors = async () => {
       try {
-        setLoading(true);
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 5000)
+          setTimeout(() => reject(new Error('timeout')), 4000)
         );
         const queryPromise = supabase
           .from('profiles')
@@ -63,14 +62,13 @@ export default function Mentors() {
           .order('full_name');
         const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
         if (!isMounted) return;
-        if (error) { setMentors(FALLBACK_MENTORS); }
-        else if (data && data.length > 0) { setMentors(data.filter(m => m.mentor_details !== null)); }
-        else { setMentors(FALLBACK_MENTORS); }
-      } catch { if (isMounted) setMentors(FALLBACK_MENTORS); }
-      finally { if (isMounted) setLoading(false); }
+        if (!error && data && data.length > 0) {
+          setMentors(data.filter(m => m.mentor_details !== null));
+        }
+      } catch { /* fallback already showing */ }
     };
     fetchMentors();
-    return () => { isMounted = false; controller.abort(); };
+    return () => { isMounted = false; };
   }, []);
 
   // Collect all unique expertise tags
