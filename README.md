@@ -1,4 +1,4 @@
-# Nexus Mentorship — AI-Powered Startup Mentoring Platform
+# Nexus Mentorship AI-Powered Startup Mentoring Platform
 
 A full-stack web application that connects aspiring entrepreneurs with experienced startup mentors and provides an AI-powered advisor for instant strategic guidance.
 
