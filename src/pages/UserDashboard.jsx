@@ -153,10 +153,22 @@ export default function UserDashboard() {
               <div className="typing-indicator"><span/><span/><span/></div>
             </div>
           ) : bookings.length === 0 ? (
-            <div className="well" style={{ textAlign: 'center', padding: '40px' }}>
-              <Calendar size={40} color="var(--text-muted)" style={{ margin: '0 auto 12px', display: 'block' }} />
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '15px' }}>No sessions yet.</p>
-              <Link to="/mentors" className="btn btn-primary">Find a Mentor</Link>
+            <div className="panel" style={{ textAlign: 'center', padding: '50px 30px', border: '2px dashed var(--border-medium)', background: 'linear-gradient(135deg, #f8f9fa 0%, #eef2f7 100%)' }}>
+              <div style={{
+                width: '70px', height: '70px', borderRadius: '50%', margin: '0 auto 18px',
+                background: 'linear-gradient(135deg, #3498db, #2980b9)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 6px 20px rgba(52,152,219,0.3)'
+              }}>
+                <Calendar size={32} color="white" />
+              </div>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '8px', color: 'var(--text-primary)' }}>No Sessions Yet</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '320px', margin: '0 auto 20px', lineHeight: 1.6 }}>
+                Book your first mentoring session to get expert advice on your startup journey.
+              </p>
+              <Link to="/mentors" className="btn btn-primary" style={{ padding: '10px 28px', fontSize: '14px' }}>
+                🚀 Find a Mentor
+              </Link>
             </div>
           ) : (
             <div className="panel">
