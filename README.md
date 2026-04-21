@@ -34,7 +34,8 @@ startup-mentors-app/
 │   ├── routes/
 │   │   ├── ai.js         # Groq AI chat endpoint
 │   │   ├── mentors.js    # Mentor CRUD routes
-│   │   └── bookings.js   # Booking routes
+│   │   ├── bookings.js   # Booking routes
+│   │   └── notify.js     # Email notification routes
 │   ├── middleware/        # Auth middleware
 │   ├── index.js          # Server entry point
 │   └── .env              # Server environment variables (not committed)
