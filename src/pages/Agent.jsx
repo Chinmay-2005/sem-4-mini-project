@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 
-// Ensure the Gemini key is loaded securely
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+// Backend API URL — defaults to localhost for development.
+// In production, set VITE_API_URL to your deployed Render backend URL.
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/ai/chat';
 
 export default function Agent() {
   const [messages, setMessages] = useState([
-    { role: 'model', content: "Hello! I am your AI Startup Advisor powered by Google Gemini. Whether you need strategies for product-led growth, advice on term sheets, or tips for scaling your engineering team, I'm here to help." }
+    { role: 'assistant', content: "Hello! I am your AI Startup Advisor, Nexus Advisor. Whether you need strategies for product-led growth, advice on term sheets, or tips for scaling your engineering team, I'm here to help." }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,55 +29,34 @@ export default function Agent() {
     setInput('');
     setLoading(true);
 
-    if (!apiKey) {
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'model', content: "Error: No API Key found (VITE_GEMINI_API_KEY). Please add it to GitHub Secrets." }]);
-        setLoading(false);
-      }, 1000);
-      return;
-    }
-
     try {
-      // List of models to try in order of preference (handles regional/account variations)
-      const modelNames = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro'];
-      let lastError = '';
-      let aiText = '';
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages.map(msg => ({
+            role: msg.role === 'assistant' || msg.role === 'model' ? 'assistant' : 'user',
+            content: msg.content
+          })),
+        })
+      });
 
-      for (const modelName of modelNames) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: updatedMessages.map(msg => ({
-                role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
-                parts: [{ text: msg.content }]
-              })),
-            })
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (aiText) break; // Success!
-          } else {
-            const err = await response.json();
-            lastError = err.error?.message || `HTTP ${response.status}`;
-          }
-        } catch (e) {
-          lastError = e.message;
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}`);
       }
 
-      if (!aiText) throw new Error(lastError || "Could not connect to any AI models.");
+      const data = await response.json();
+      const aiText = data.content;
+
+      if (!aiText) throw new Error("Received empty response from AI advisor.");
       
-      setMessages(prev => [...prev, { role: 'model', content: aiText }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: aiText }]);
     } catch (error) {
-      console.error('Gemini Universal Error:', error);
+      console.error('AI Advisor Error:', error);
       setMessages(prev => [...prev, { 
-        role: 'model', 
-        content: `Error: ${error.message}. Please check if your API key is restricted or try an incognito window.` 
+        role: 'assistant', 
+        content: `Error: ${error.message}. Please make sure the backend server is running.` 
       }]);
     } finally {
       setLoading(false);

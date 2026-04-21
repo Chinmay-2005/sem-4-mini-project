@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import mentorRoutes from './routes/mentors.js';
 import bookingRoutes from './routes/bookings.js';
+import aiRoutes from './routes/ai.js';
 
 dotenv.config();
 
@@ -23,7 +24,14 @@ export const supabase = createClient(
 );
 
 // Middleware
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'], credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://0x4r35.github.io',        // GitHub Pages
+  process.env.CORS_ORIGIN,            // Custom origin from env (optional)
+].filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
 // Health check
@@ -32,6 +40,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().t
 // Routes
 app.use('/api/mentors', mentorRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error handler
 app.use((err, req, res, next) => {

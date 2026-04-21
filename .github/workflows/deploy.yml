@@ -31,9 +31,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build
-        # Expose the GitHub Secret to Vite during the build process
         env:
-          VITE_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
       - name: Copy index.html to 404.html for SPA routing
         run: cp dist/index.html dist/404.html
