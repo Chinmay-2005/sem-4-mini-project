@@ -48,3 +48,7 @@ startup-mentors-app/
 ## License
 
 This project is for educational purposes (Semester 4 Mini Project).
+manav howal
+chinmay G
+ayush ambre 
+aayush choudhary 
